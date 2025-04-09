@@ -5,7 +5,7 @@ session_start();
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $name = $_POST['full_name'];
     $email = $_POST['email'];
-    $password = $_POST['password']; // غير مشفر حسب طلبك
+    $password = $_POST['password'];    
     $role = 'طالب';
 
     $stmt = $pdo->prepare("INSERT INTO users (full_name, email, password, role, status, permission_level)
