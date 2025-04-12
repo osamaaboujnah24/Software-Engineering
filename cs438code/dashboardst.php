@@ -10,24 +10,18 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'طالب') {
 
 $user_id = $_SESSION['user']['user_id'];
 
-// جلب البيانات الخاصة بالطالب (المهام، المشروع)
-$stmt = $pdo->prepare("SELECT * FROM tasks WHERE assigned_user_id = ?");
-$stmt->execute([$user_id]);
-$tasks = $stmt->fetchAll();
-
 // جلب البيانات الخاصة بالمشروع الذي ينتمي إليه الطالب
 $stmt_project = $pdo->prepare("SELECT * FROM projects WHERE team_id IN (SELECT team_id FROM team_members WHERE user_id = ?)");
 $stmt_project->execute([$user_id]);
 $project = $stmt_project->fetch();
 
-// التحقق من وجود المهام والمشروع
-if (!$tasks) {
-    $tasks_error = "لا توجد مهام مسندة إليك.";
-}
+// جلب التقدم الحالي للمشروع
+$stmt_progress = $pdo->prepare("SELECT progress_percent FROM progress_board WHERE project_id = ?");
+$stmt_progress->execute([$project['project_id']]);
+$progress = $stmt_progress->fetch();
 
-if (!$project) {
-    $project_error = "لا يوجد مشروع مرتبط بهذا الطالب.";
-}
+// التحقق إذا تم العثور على التقدم
+$progress_percent = $progress ? $progress['progress_percent'] : 0;
 ?>
 
 <!DOCTYPE html>
@@ -59,6 +53,7 @@ if (!$project) {
             text-decoration: underline;
         }
 
+        /* ترويسة */
         header {
             background-color: #007bff;
             color: white;
@@ -70,6 +65,7 @@ if (!$project) {
             font-size: 24px;
         }
 
+        /* تصميم النموذج */
         form {
             background-color: white;
             width: 60%;
@@ -89,6 +85,7 @@ if (!$project) {
             box-sizing: border-box;
         }
 
+        /* جدول المهام */
         table {
             width: 80%;
             margin: 20px auto;
@@ -114,6 +111,7 @@ if (!$project) {
             background-color: #f1f1f1;
         }
 
+        /* الأزرار */
         button {
             padding: 12px 20px;
             background-color: #28a745;
@@ -150,11 +148,13 @@ if (!$project) {
     <h2>مرحبًا، <?php echo $_SESSION['user']['full_name']; ?>!</h2>
 </header>
 
-<h3>مشروعك: <?php echo $project ? $project['title'] : $project_error; ?></h3>
-<p><strong>الوصف:</strong> <?php echo $project ? $project['description'] : $project_error; ?></p>
+<h3>مشروعك: <?php echo $project ? $project['title'] : 'لا يوجد مشروع'; ?></h3>
+<p><strong>الوصف:</strong> <?php echo $project ? $project['description'] : 'لا يوجد وصف للمشروع'; ?></p>
+
+<!-- عرض نسبة التقدم -->
+<h3>نسبة التقدم في المشروع: <?php echo $progress_percent; ?>%</h3>
 
 <h3>المهام المسندة إليك:</h3>
-<?php if (isset($tasks_error)) { echo "<p>$tasks_error</p>"; } ?>
 <table>
     <tr>
         <th>العنوان</th>
@@ -162,19 +162,22 @@ if (!$project) {
         <th>التاريخ</th>
         <th>حالة التنفيذ</th>
     </tr>
-    <?php if ($tasks): ?>
-        <?php foreach ($tasks as $task): ?>
-        <tr>
-            <td><?php echo $task['title']; ?></td>
-            <td><?php echo $task['description']; ?></td>
-            <td><?php echo $task['start_date']; ?> إلى <?php echo $task['end_date']; ?></td>
-            <td><?php echo $task['status']; ?></td>
-        </tr>
-        <?php endforeach; ?>
-    <?php endif; ?>
+    <?php
+    $stmt_tasks = $pdo->prepare("SELECT * FROM tasks WHERE assigned_user_id = ?");
+    $stmt_tasks->execute([$user_id]);
+    $tasks = $stmt_tasks->fetchAll();
+
+    foreach ($tasks as $task): ?>
+    <tr>
+        <td><?php echo $task['title']; ?></td>
+        <td><?php echo $task['description']; ?></td>
+        <td><?php echo $task['start_date']; ?> إلى <?php echo $task['end_date']; ?></td>
+        <td><?php echo $task['status']; ?></td>
+    </tr>
+    <?php endforeach; ?>
 </table>
 
-<a class="logout-link" href="../logout.php">تسجيل الخروج</a>
+<a href="../logout.php">تسجيل الخروج</a>
 
 </body>
 </html>
