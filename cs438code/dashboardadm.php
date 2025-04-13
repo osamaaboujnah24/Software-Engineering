@@ -12,8 +12,6 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'مدير مشرو
 $stmt_projects = $pdo->prepare("SELECT * FROM projects");
 $stmt_projects->execute();
 $projects = $stmt_projects->fetchAll();
-
-// جلب التقدم الخاص بكل مشروع
 ?>
 
 <!DOCTYPE html>
@@ -21,7 +19,6 @@ $projects = $stmt_projects->fetchAll();
 <head>
     <meta charset="UTF-8">
     <title>لوحة تحكم مدير المشروع</title>
-	
     <style>
         /* تصميم عام */
         body {
@@ -44,6 +41,23 @@ $projects = $stmt_projects->fetchAll();
 
         a:hover {
             text-decoration: underline;
+        }
+
+        /* شريط التنقل */
+        nav {
+            background-color: #007bff;
+            padding: 10px 0;
+        }
+
+        nav a {
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            font-size: 16px;
+        }
+
+        nav a:hover {
+            background-color: #0056b3;
         }
 
         /* ترويسة */
@@ -78,7 +92,7 @@ $projects = $stmt_projects->fetchAll();
             box-sizing: border-box;
         }
 
-        /* جدول المشاريع والمهام */
+        /* جدول المشاريع */
         table {
             width: 80%;
             margin: 20px auto;
@@ -138,8 +152,16 @@ $projects = $stmt_projects->fetchAll();
 
 <body>
 
+<!-- شريط التنقل -->
+<nav>
+    <a href="dashboard.php">لوحة التحكم</a>
+    <a href="add_project.php">إضافة مشروع جديد</a>
+    <a href="logout.php">تسجيل الخروج</a>
+</nav>
 
-<h2>مرحبًا، <?php echo $_SESSION['user']['full_name']; ?> (مدير مشروع)</h2>
+<header>
+    <h2>مرحبًا، <?php echo $_SESSION['user']['full_name']; ?> (مدير مشروع)</h2>
+</header>
 
 <h3>المشاريع الحالية:</h3>
 <table>
@@ -170,7 +192,6 @@ $projects = $stmt_projects->fetchAll();
     <?php endforeach; ?>
 </table>
 
-<a href="../logout.php">تسجيل الخروج</a>
 
 </body>
 </html>
