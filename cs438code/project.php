@@ -2,7 +2,6 @@
 include 'database.php';
 session_start();
 
-// التحقق من إذا كان المستخدم هو مدير مشروع
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'مدير مشروع') {
     header("Location: cs438-1/login.php");
     exit;
