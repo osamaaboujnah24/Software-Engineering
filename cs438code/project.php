@@ -2,6 +2,7 @@
 include 'database.php';
 session_start();
 
+// التحقق من إذا كان المستخدم هو مدير مشروع
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'مدير مشروع') {
     header("Location: cs438-1/login.php");
     exit;
@@ -33,99 +34,119 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta charset="UTF-8">
     <title>إنشاء مشروع جديد</title>
     <style>
-        /* تصميم عام */
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f4f7fc;
-            color: #333;
-            margin: 0;
-            padding: 0;
-            text-align: center;
-        }
+   /* تصميم عام */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #212121; /* خلفية داكنة */
+    color: #f4f4f4; /* لون النص الأبيض */
+    margin: 0;
+    padding: 0;
+    text-align: center;
+}
 
-        h2 {
-            color: #007bff;
-        }
+h2 {
+    color: #2ecc71; /* لون أخضر مميز */
+    font-size: 32px;
+    margin-bottom: 20px;
+}
 
-        a {
-            color: #007bff;
-            text-decoration: none;
-        }
+/* ترويسة */
+header {
+    background-color: #2ecc71; /* ترويسة خضراء */
+    color: white;
+    padding: 25px 0;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
 
-        a:hover {
-            text-decoration: underline;
-        }
+header h2 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: bold;
+}
 
-        /* ترويسة */
-        header {
-            background-color: #007bff;
-            color: white;
-            padding: 15px 0;
-        }
+/* تصميم النموذج */
+form {
+    background-color: #333333; /* خلفية داكنة للنموذج */
+    width: 60%;
+    margin: 40px auto;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
 
-        header h2 {
-            margin: 0;
-            font-size: 24px;
-        }
+form:hover {
+    transform: scale(1.02);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+}
 
-        /* تصميم النموذج */
-        form {
-            background-color: white;
-            width: 60%;
-            margin: 30px auto;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-        }
+label {
+    display: block;
+    text-align: right;
+    margin: 12px 0 8px;
+    font-size: 18px;
+    font-weight: 500;
+    color: #2ecc71; /* لون أخضر للنصوص */
+}
 
-        label {
-            display: block;
-            text-align: right;
-            margin: 10px 0 5px;
-            font-size: 16px;
-        }
+input[type="text"], input[type="date"], textarea {
+    width: 100%;
+    padding: 16px;
+    margin: 12px 0;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
 
-        input[type="text"], input[type="date"], textarea {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 16px;
-        }
+input[type="text"]:focus, input[type="date"]:focus, textarea:focus {
+    border-color: #2ecc71; /* أخضر عند التركيز */
+    box-shadow: 0 0 8px rgba(46, 204, 113, 0.3);
+    outline: none;
+}
 
-        textarea {
-            resize: vertical;
-            height: 120px;
-        }
+textarea {
+    resize: vertical;
+    height: 150px;
+}
 
-        button {
-            padding: 12px 20px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-        }
+/* أزرار */
+button {
+    padding: 16px 32px;
+    background-color: #2ecc71; /* أخضر للأزرار */
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    margin-top: 20px;
+}
 
-        button:hover {
-            background-color: #218838;
-        }
+button:hover {
+    background-color: #27ae60; /* تدرج اللون الأخضر عند التمرير */
+    transform: translateY(-2px);
+}
 
-        .logout-link {
-            margin-top: 20px;
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #dc3545;
-            color: white;
-            border-radius: 5px;
-            text-decoration: none;
-        }
+/* رابط تسجيل الخروج */
+.logout-link {
+    margin-top: 30px;
+    display: inline-block;
+    padding: 12px 25px;
+    background-color: #f39c12; /* لون دافئ وأنيق */
+    color: white;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 16px;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
 
-        .logout-link:hover {
-            background-color: #c82333;
-        }
+.logout-link:hover {
+    background-color: #e67e22; /* تدرج اللون عند التمرير */
+    transform: translateY(-2px);
+}
+
+
     </style>
 </head>
 <body>
