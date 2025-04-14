@@ -14,7 +14,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $description = $_POST['description'];
     $start_date = $_POST['start_date'];
     $end_date = $_POST['end_date'];
-    $manager_id = $_POST['manager_id']; // من المستخدمين
+    $manager_id = $_POST['manager_id']; // من القائمة المنسدلة للمشرفين
     $team_id = $_POST['team_id']; // الفريق المرتبط بالمشروع
 
     // إضافة المشروع إلى قاعدة البيانات
@@ -34,7 +34,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta charset="UTF-8">
     <title>إنشاء مشروع جديد</title>
     <style>
-   /* تصميم عام */
+    /* تصميم عام */
 body {
     font-family: 'Arial', sans-serif;
     background-color: #212121; /* خلفية داكنة */
@@ -45,14 +45,14 @@ body {
 }
 
 h2 {
-    color: #2ecc71; /* لون أخضر مميز */
+    color: #e74c3c; /* لون أحمر مميز */
     font-size: 32px;
     margin-bottom: 20px;
 }
 
 /* ترويسة */
 header {
-    background-color: #2ecc71; /* ترويسة خضراء */
+    background-color: #e74c3c; /* ترويسة حمراء */
     color: white;
     padding: 25px 0;
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
@@ -86,10 +86,10 @@ label {
     margin: 12px 0 8px;
     font-size: 18px;
     font-weight: 500;
-    color: #2ecc71; /* لون أخضر للنصوص */
+    color: #e74c3c; /* لون أحمر للنصوص */
 }
 
-input[type="text"], input[type="date"], textarea {
+input[type="text"], input[type="date"], select, textarea {
     width: 100%;
     padding: 16px;
     margin: 12px 0;
@@ -99,7 +99,7 @@ input[type="text"], input[type="date"], textarea {
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-input[type="text"]:focus, input[type="date"]:focus, textarea:focus {
+input[type="text"]:focus, input[type="date"]:focus, select:focus, textarea:focus {
     border-color: #2ecc71; /* أخضر عند التركيز */
     box-shadow: 0 0 8px rgba(46, 204, 113, 0.3);
     outline: none;
@@ -124,7 +124,7 @@ button {
 }
 
 button:hover {
-    background-color: #27ae60; /* تدرج اللون الأخضر عند التمرير */
+    background-color: #27ae60; /* تدرج اللون عند التمرير */
     transform: translateY(-2px);
 }
 
@@ -145,8 +145,6 @@ button:hover {
     background-color: #e67e22; /* تدرج اللون عند التمرير */
     transform: translateY(-2px);
 }
-
-
     </style>
 </head>
 <body>
@@ -169,10 +167,36 @@ button:hover {
     <input type="date" name="end_date" required><br>
 
     <label for="manager_id">المشرف:</label>
-    <input type="text" name="manager_id" required><br>
+    <select name="manager_id" required>
+        <option value="">اختر المشرف</option>
+        <?php
+        // جلب قائمة المشرفين من جدول project_managers
+        $stmt_managers = $pdo->prepare("SELECT * FROM project_managers");
+        $stmt_managers->execute();
+        $managers = $stmt_managers->fetchAll();
+        
+        // عرض المشرفين في قائمة منسدلة
+        foreach ($managers as $manager) {
+            echo "<option value='" . $manager['manager_id'] . "'>" . htmlspecialchars($manager['name']) . "</option>";
+        }
+        ?>
+    </select><br>
 
     <label for="team_id">الفريق:</label>
-    <input type="text" name="team_id" required><br>
+    <select name="team_id" required>
+        <option value="">اختر الفريق</option>
+        <?php
+        // جلب قائمة الفرق من جدول teams
+        $stmt_teams = $pdo->prepare("SELECT * FROM teams");
+        $stmt_teams->execute();
+        $teams = $stmt_teams->fetchAll();
+        
+        // عرض الفرق في قائمة منسدلة
+        foreach ($teams as $team) {
+            echo "<option value='" . $team['team_id'] . "'>" . htmlspecialchars($team['team_name']) . "</option>";
+        }
+        ?>
+    </select><br>
 
     <button type="submit">إنشاء المشروع</button>
 </form>
