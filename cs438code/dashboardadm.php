@@ -155,7 +155,7 @@ $projects = $stmt_projects->fetchAll();
 <!-- شريط التنقل -->
 <nav>
     <a href="dashboard.php">لوحة التحكم</a>
-    <a href="add_project.php">إضافة مشروع جديد</a>
+    <a href="project.php">إضافة مشروع جديد</a>
     <a href="logout.php">تسجيل الخروج</a>
 </nav>
 
@@ -185,8 +185,8 @@ $projects = $stmt_projects->fetchAll();
         <td><?php echo $project['start_date']; ?> إلى <?php echo $project['end_date']; ?></td>
         <td><?php echo $progress_percent; ?>%</td>
         <td>
-            <a href="edit_project.php?id=<?php echo $project['project_id']; ?>">تعديل</a> |
-            <a href="delete_project.php?id=<?php echo $project['project_id']; ?>">حذف</a>
+			            <a href="veiwproject.php?id=<?php echo $project['project_id']; ?>">عرض</a>
+
         </td>
     </tr>
     <?php endforeach; ?>
