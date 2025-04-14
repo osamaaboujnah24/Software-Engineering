@@ -20,7 +20,6 @@ $projects = $stmt_projects->fetchAll();
     <meta charset="UTF-8">
     <title>لوحة تحكم مدير المشروع</title>
     <style>
-        /* تصميم عام */
         body {
             font-family: 'Arial', sans-serif;
             background-color: #f4f7fc;
@@ -43,7 +42,6 @@ $projects = $stmt_projects->fetchAll();
             text-decoration: underline;
         }
 
-        /* شريط التنقل */
         nav {
             background-color: #007bff;
             padding: 10px 0;
@@ -60,7 +58,6 @@ $projects = $stmt_projects->fetchAll();
             background-color: #0056b3;
         }
 
-        /* ترويسة */
         header {
             background-color: #007bff;
             color: white;
@@ -72,7 +69,6 @@ $projects = $stmt_projects->fetchAll();
             font-size: 24px;
         }
 
-        /* تصميم النموذج */
         form {
             background-color: white;
             width: 60%;
@@ -92,7 +88,6 @@ $projects = $stmt_projects->fetchAll();
             box-sizing: border-box;
         }
 
-        /* جدول المشاريع */
         table {
             width: 80%;
             margin: 20px auto;
@@ -118,7 +113,6 @@ $projects = $stmt_projects->fetchAll();
             background-color: #f1f1f1;
         }
 
-        /* الأزرار */
         button {
             padding: 12px 20px;
             background-color: #28a745;
@@ -133,7 +127,6 @@ $projects = $stmt_projects->fetchAll();
             background-color: #218838;
         }
 
-        /* رابط تسجيل الخروج */
         .logout-link {
             margin-top: 20px;
             display: inline-block;
@@ -152,7 +145,6 @@ $projects = $stmt_projects->fetchAll();
 
 <body>
 
-<!-- شريط التنقل -->
 <nav>
     <a href="dashboard.php">لوحة التحكم</a>
     <a href="project.php">إضافة مشروع جديد</a>
@@ -173,7 +165,6 @@ $projects = $stmt_projects->fetchAll();
         <th>الإجراءات</th>
     </tr>
     <?php foreach ($projects as $project):
-        // جلب التقدم لكل مشروع
         $stmt_progress = $pdo->prepare("SELECT progress_percent FROM progress_board WHERE project_id = ?");
         $stmt_progress->execute([$project['project_id']]);
         $progress = $stmt_progress->fetch();
