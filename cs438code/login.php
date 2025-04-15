@@ -17,9 +17,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // التوجيه حسب الدور
         if ($user['role'] === 'مدير مشروع') {
-            header("Location: ../admin/dashboard.php");
-        } elseif ($user['role'] === 'طالب') {
-            header("Location: dashboard.php");
+            header("Location: dashboardadm.php");
+        } 
+		elseif ($user['role'] === 'طالب') {
+            header("Location: dashboardST.php");
+		}	
+		elseif ($user['role'] === 'مشرف') {
+            header("Location: dashboardsupervisor.php");
         } else {
             $error = "نوع المستخدم غير معروف.";
         }
