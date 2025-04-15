@@ -78,52 +78,49 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             text-align: center;
         }
 
-        h2 {
-            color: #e74c3c; /* لون أحمر مميز */
-            font-size: 32px;
-            margin-bottom: 20px;
-        }
-
         /* ترويسة */
         header {
-            background-color: #34495e; /* ترويسة داكنة */
+            background-color: #16a085; /* ترويسة بلون أخضر مائل للأزرق */
             color: white;
-            padding: 25px 0;
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+            padding: 30px 0;
+            text-align: center;
+            width: 100%;
         }
 
         header h2 {
-            margin: 0;
-            font-size: 28px;
+            font-size: 32px;
             font-weight: bold;
+            margin: 0;
         }
 
         /* تصميم النموذج */
         form {
-            background-color: #1c2833; /* خلفية داكنة للنموذج */
-            width: 60%;
-            margin: 40px auto;
+            background-color: #34495e; /* خلفية داكنة للنموذج */
+            width: 70%;
+            max-width: 800px;
+            margin: 20px auto;
             padding: 40px;
             border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
             transition: all 0.3s ease;
         }
 
+        /* تأثير عند تمرير الماوس */
         form:hover {
-            transform: scale(1.02);
+            transform: scale(1.03);
             box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
         }
 
         label {
             display: block;
             text-align: right;
-            margin: 12px 0 8px;
+            margin: 15px 0 8px;
             font-size: 18px;
             font-weight: 500;
             color: #e74c3c; /* لون أحمر للنصوص */
         }
 
-        input[type="text"], input[type="date"], select, textarea {
+        input[type="text"], input[type="date"], textarea, select {
             width: 100%;
             padding: 16px;
             margin: 12px 0;
@@ -133,9 +130,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
 
-        input[type="text"]:focus, input[type="date"]:focus, select:focus, textarea:focus {
-            border-color: #e74c3c; /* أحمر عند التركيز */
-            box-shadow: 0 0 8px rgba(231, 76, 60, 0.3);
+        /* تأثير التركيز */
+        input[type="text"]:focus, input[type="date"]:focus, textarea:focus, select:focus {
+            border-color: #2ecc71; /* أخضر عند التركيز */
+            box-shadow: 0 0 8px rgba(46, 204, 113, 0.3);
             outline: none;
         }
 
@@ -147,7 +145,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         /* أزرار */
         button {
             padding: 16px 32px;
-            background-color: #16a085; /* لون أخضر مائل للأزرق للأزرار */
+            background-color: #28a745; /* لون أخضر مائل للأزرق للأزرار */
             color: white;
             border: none;
             border-radius: 8px;
@@ -155,10 +153,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             cursor: pointer;
             transition: background-color 0.3s ease, transform 0.3s ease;
             margin-top: 20px;
+            width: 100%;
         }
 
         button:hover {
-            background-color: #1abc9c; /* تدرج اللون الأخضر المائل للأزرق عند التمرير */
+            background-color: #218838; /* تدرج اللون الأخضر عند التمرير */
             transform: translateY(-2px);
         }
 
