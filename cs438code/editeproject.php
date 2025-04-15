@@ -8,23 +8,57 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'مدير مشرو
     exit;
 }
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // استلام البيانات من النموذج
-    $title = $_POST['title'];
-    $description = $_POST['description'];
-    $start_date = $_POST['start_date'];
-    $end_date = $_POST['end_date'];
-    $manager_id = $_POST['manager_id']; // من القائمة المنسدلة للمشرفين
-    $team_id = $_POST['team_id']; // الفريق المرتبط بالمشروع
+// التحقق من وجود قيمة project_id في الرابط
+if (isset($_GET['id'])) {
+    $project_id = $_GET['id'];
 
-    // إضافة المشروع إلى قاعدة البيانات
-    $stmt = $pdo->prepare("INSERT INTO projects (title, description, start_date, end_date, manager_id, team_id) 
-                           VALUES (?, ?, ?, ?, ?, ?)");
-    $stmt->execute([$title, $description, $start_date, $end_date, $manager_id, $team_id]);
+    // تنفيذ استعلام للحصول على تفاصيل المشروع
+    $stmt = $pdo->prepare("SELECT * FROM projects WHERE project_id = ?");
+    $stmt->execute([$project_id]);
+    $project = $stmt->fetch(); // جلب البيانات من الاستعلام
 
-    // إعادة التوجيه إلى لوحة الأدمن بعد الإضافة
-    header("Location: admin/dashboard.php");
+    // التحقق إذا كان المشروع موجود
+    if (!$project) {
+        echo "المشروع غير موجود!";
+        exit;
+    }
+} else {
+    echo "المشروع غير موجود!";
     exit;
+}
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // التحقق من وجود البيانات في الـ POST
+    if (isset($_POST['title'], $_POST['description'], $_POST['start_date'], $_POST['end_date'], $_POST['manager_id'], $_POST['team_id'])) {
+        
+        // استلام البيانات من النموذج
+        $title = $_POST['title'];
+        $description = $_POST['description'];
+        $start_date = $_POST['start_date'];
+        $end_date = $_POST['end_date'];
+        $manager_id = $_POST['manager_id'];
+        $team_id = $_POST['team_id'];
+
+        // إضافة سجل الأخطاء
+        try {
+            // تحديث المشروع في قاعدة البيانات
+            $stmt = $pdo->prepare("UPDATE projects SET title = ?, description = ?, start_date = ?, end_date = ?, manager_id = ?, team_id = ? WHERE project_id = ?");
+            $stmt->execute([$title, $description, $start_date, $end_date, $manager_id, $team_id, $project_id]);
+
+            // التحقق من نجاح العملية
+            if ($stmt->rowCount() > 0) {
+                // إعادة التوجيه إلى لوحة الأدمن بعد التعديل
+                header("Location: dashboardadm.php");
+                exit;
+            } else {
+                echo "لم يتم تعديل المشروع. تأكد من وجود بيانات جديدة لتحديثها.";
+            }
+        } catch (Exception $e) {
+            echo "حدث خطأ أثناء التعديل: " . $e->getMessage();
+        }
+    } else {
+        echo "الرجاء ملء جميع الحقول.";
+    }
 }
 ?>
 
@@ -32,7 +66,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>إنشاء مشروع جديد</title>
+    <title>تعديل المشروع</title>
     <style>
         /* تصميم عام */
         body {
@@ -149,21 +183,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <body>
 
 <header>
-    <h2>إنشاء مشروع جديد</h2>
+    <h2>تعديل المشروع</h2>
 </header>
 
 <form method="POST">
     <label for="title">اسم المشروع:</label>
-    <input type="text" name="title" required><br>
+    <input type="text" name="title" value="<?php echo htmlspecialchars($project['title'] ?? ''); ?>" required><br>
 
     <label for="description">الوصف:</label>
-    <textarea name="description" required></textarea><br>
+    <textarea name="description" required><?php echo htmlspecialchars($project['description'] ?? ''); ?></textarea><br>
 
     <label for="start_date">تاريخ البداية:</label>
-    <input type="date" name="start_date" required><br>
+    <input type="date" name="start_date" value="<?php echo htmlspecialchars($project['start_date'] ?? ''); ?>" required><br>
 
     <label for="end_date">تاريخ النهاية:</label>
-    <input type="date" name="end_date" required><br>
+    <input type="date" name="end_date" value="<?php echo htmlspecialchars($project['end_date'] ?? ''); ?>" required><br>
 
     <label for="manager_id">المشرف:</label>
     <select name="manager_id" required>
@@ -173,10 +207,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt_managers = $pdo->prepare("SELECT * FROM project_managers");
         $stmt_managers->execute();
         $managers = $stmt_managers->fetchAll();
-        
+
         // عرض المشرفين في قائمة منسدلة
         foreach ($managers as $manager) {
-            echo "<option value='" . $manager['manager_id'] . "'>" . htmlspecialchars($manager['name']) . "</option>";
+            echo "<option value='" . $manager['manager_id'] . "' " . ($manager['manager_id'] == $project['manager_id'] ? 'selected' : '') . ">" . htmlspecialchars($manager['name']) . "</option>";
         }
         ?>
     </select><br>
@@ -189,15 +223,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt_teams = $pdo->prepare("SELECT * FROM teams");
         $stmt_teams->execute();
         $teams = $stmt_teams->fetchAll();
-        
+
         // عرض الفرق في قائمة منسدلة
         foreach ($teams as $team) {
-            echo "<option value='" . $team['team_id'] . "'>" . htmlspecialchars($team['team_name']) . "</option>";
+            echo "<option value='" . $team['team_id'] . "' " . ($team['team_id'] == $project['team_id'] ? 'selected' : '') . ">" . htmlspecialchars($team['team_name']) . "</option>";
         }
         ?>
     </select><br>
 
-    <button type="submit">إنشاء المشروع</button>
+    <button type="submit">تحديث المشروع</button>
 </form>
 
 </body>
