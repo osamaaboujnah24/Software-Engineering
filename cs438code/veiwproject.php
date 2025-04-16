@@ -12,22 +12,26 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'مدير مشرو
 if (isset($_GET['id'])) {
     $project_id = $_GET['id'];
 
-    // تنفيذ استعلام للحصول على تفاصيل المشروع
+    // جلب تفاصيل المشروع
     $stmt_project = $pdo->prepare("SELECT * FROM projects WHERE project_id = ?");
     $stmt_project->execute([$project_id]);
     $project = $stmt_project->fetch();
 
-    // التحقق إذا كان المشروع موجود
     if (!$project) {
         echo "المشروع غير موجود!";
         exit;
     }
 
-    // جلب التقدم الخاص بالمشروع
+    // جلب التقدم
     $stmt_progress = $pdo->prepare("SELECT progress_percent FROM progress_board WHERE project_id = ?");
     $stmt_progress->execute([$project_id]);
     $progress = $stmt_progress->fetch();
     $progress_percent = $progress ? $progress['progress_percent'] : 0;
+
+    // جلب التقارير المرتبطة بالمشروع
+    $stmt_reports = $pdo->prepare("SELECT * FROM reports WHERE project_id = ?");
+    $stmt_reports->execute([$project_id]);
+    $reports = $stmt_reports->fetchAll();
 } else {
     echo "المشروع غير موجود!";
     exit;
@@ -49,18 +53,6 @@ if (isset($_GET['id'])) {
             text-align: center;
         }
 
-        h2, h3 {
-            color: #007bff;
-        }
-
-        a {
-            color: #007bff;
-            text-decoration: none;
-        }
-
-        a:hover {
-            text-decoration: underline;
-        }
         header {
             background-color: #007bff;
             color: white;
@@ -74,7 +66,7 @@ if (isset($_GET['id'])) {
 
         .project-details {
             background-color: white;
-            width: 60%;
+            width: 70%;
             margin: 30px auto;
             padding: 30px;
             border-radius: 10px;
@@ -87,23 +79,9 @@ if (isset($_GET['id'])) {
         }
 
         .project-details h3 {
-            margin-top: 20px;
+            margin-top: 30px;
             font-size: 22px;
             color: #007bff;
-        }
-
-        .back-link {
-            display: inline-block;
-            margin-top: 20px;
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            border-radius: 5px;
-            text-decoration: none;
-        }
-
-        .back-link:hover {
-            background-color: #0056b3;
         }
 
         .edit-delete-links a {
@@ -126,9 +104,46 @@ if (isset($_GET['id'])) {
         .delete-link:hover {
             background-color: #c82333;
         }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            background-color: #0056b3;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        td {
+            background-color: #f9f9f9;
+        }
+
+        tr:hover td {
+            background-color: #f1f1f1;
+        }
     </style>
 </head>
-
 <body>
 
 <header>
@@ -143,14 +158,35 @@ if (isset($_GET['id'])) {
     <p><strong>التقدم:</strong> <?php echo $progress_percent; ?>%</p>
     <p><strong>المشرف:</strong> <?php echo htmlspecialchars($project['manager_id']); ?></p>
     <p><strong>الفريق:</strong> <?php echo htmlspecialchars($project['team_id']); ?></p>
-    
+
     <div class="edit-delete-links">
         <a href="edit.php?id=<?php echo $project['project_id']; ?>">تعديل المشروع</a>
         <a href="delete_project.php?id=<?php echo $project['project_id']; ?>" class="delete-link" onclick="return confirm('هل أنت متأكد أنك تريد حذف هذا المشروع؟')">حذف المشروع</a>
     </div>
 
+    <h3>التقارير المرسلة:</h3>
+    <?php if (!empty($reports)): ?>
+        <table>
+            <tr>
+                <th>عنوان التقرير</th>
+                <th>المحتوى</th>
+                <th>تاريخ الإرسال</th>
+            </tr>
+            <?php foreach ($reports as $report): ?>
+            <tr>
+                <td><?php echo htmlspecialchars($report['title']); ?></td>
+                <td><?php echo nl2br(htmlspecialchars($report['content'])); ?></td>
+                <td><?php echo htmlspecialchars($report['created_at'] ?? ''); ?></td>
+            </tr>
+            <?php endforeach; ?>
+        </table>
+    <?php else: ?>
+        <p style="color: #777;">لا توجد تقارير مرسلة لهذا المشروع بعد.</p>
+    <?php endif; ?>
+
     <a href="dashboardadm.php" class="back-link">العودة إلى لوحة التحكم</a>
 </div>
+
 
 </body>
 </html>
