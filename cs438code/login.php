@@ -2,38 +2,42 @@
 include 'data.php';
 session_start();
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $email = $_POST['email'];
-    $password = $_POST['password'];
+try {
+    if ($_SERVER["REQUEST_METHOD"] == "POST") {
+        $email = $_POST['email'];
+        $password = $_POST['password'];
 
-    // البحث عن المستخدم في قاعدة البيانات
-    $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
-    $stmt->execute([$email]);
-    $user = $stmt->fetch();
+        // البحث عن المستخدم
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
+        $stmt->execute([$email]);
+        $user = $stmt->fetch();
 
-    // التحقق من صحة كلمة المرور
-    if ($user && $password === $user['password']) {
-        $_SESSION['user'] = $user;
+        if ($user && $password === $user['password']) {
+            $_SESSION['user'] = $user;
 
-        // التوجيه حسب الدور
-        if ($user['role'] === 'مدير مشروع') {
-            header("Location: dashboardadm.php");
-        } 
-		elseif ($user['role'] === 'طالب') {
-            header("Location: dashboardST.php");
-		}	
-		elseif ($user['role'] === 'مشرف') {
-            header("Location: dashboardsupervisor.php");
+            // التوجيه حسب الدور
+            switch ($user['role']) {
+                case 'مدير مشروع':
+                    header("Location: dashboardadm.php");
+                    break;
+                case 'طالب':
+                    header("Location: dashboardST.php");
+                    break;
+                case 'مشرف':
+                    header("Location: dashboardsupervisor.php");
+                    break;
+                default:
+                    $error = "نوع المستخدم غير معروف.";
+            }
+            exit;
         } else {
-            $error = "نوع المستخدم غير معروف.";
+            $error = "بيانات الدخول غير صحيحة.";
         }
-        exit;
-    } else {
-        $error = "بيانات الدخول غير صحيحة.";
     }
+} catch (PDOException $e) {
+    $error = "خطأ في قاعدة البيانات: " . $e->getMessage();
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -41,59 +45,80 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <title>تسجيل الدخول</title>
     <style>
         body {
-            font-family: Tahoma;
-            background-color: #f9f9f9;
-            padding: 40px;
-            text-align: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
 
         form {
-            background-color: white;
-            width: 400px;
-            margin: auto;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            background-color: #fff;
+            width: 380px;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        form:hover {
+            transform: scale(1.03);
         }
 
         h3 {
             margin-bottom: 20px;
+            font-size: 26px;
+            color: #2ecc71;
         }
 
         input {
             width: 90%;
-            padding: 10px;
-            margin: 10px 0;
-            font-size: 16px;
-            border-radius: 5px;
+            padding: 12px;
+            margin: 12px 0;
+            font-size: 15px;
+            border-radius: 6px;
             border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
+        input:focus {
+            border-color: #2ecc71;
+            outline: none;
+            box-shadow: 0 0 8px rgba(46, 204, 113, 0.3);
         }
 
         button {
-            width: 95%;
-            padding: 10px;
-            background-color: #28a745;
+            width: 100%;
+            padding: 12px;
+            background-color: #2ecc71;
             color: white;
             font-size: 16px;
             border: none;
-            border-radius: 5px;
+            border-radius: 6px;
             cursor: pointer;
+            transition: background-color 0.3s ease;
         }
 
         button:hover {
-            background-color: #218838;
+            background-color: #27ae60;
         }
 
         .error {
-            color: red;
-            margin-top: 10px;
+            color: #e74c3c;
+            margin-top: 15px;
+            font-size: 14px;
         }
 
         .back-link {
-            margin-top: 15px;
-            display: block;
-            color: #007bff;
+            margin-top: 20px;
+            display: inline-block;
+            color: #2ecc71;
             text-decoration: none;
+            font-size: 15px;
         }
 
         .back-link:hover {
