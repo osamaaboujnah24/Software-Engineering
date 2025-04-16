@@ -2,42 +2,62 @@
 include 'data.php';
 session_start();
 
-try {
-    if ($_SERVER["REQUEST_METHOD"] == "POST") {
-        $email = $_POST['email'];
-        $password = $_POST['password'];
+class LoginHandler {
+    private $pdo;
+    private $error;
 
-        // البحث عن المستخدم
-        $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
-        $stmt->execute([$email]);
-        $user = $stmt->fetch();
+    public function __construct($pdo) {
+        $this->pdo = $pdo;
+    }
 
-        if ($user && $password === $user['password']) {
-            $_SESSION['user'] = $user;
+    public function processLogin() {
+        if ($_SERVER["REQUEST_METHOD"] == "POST") {
+            $email = $_POST['email'];
+            $password = $_POST['password'];
 
-            // التوجيه حسب الدور
-            switch ($user['role']) {
-                case 'مدير مشروع':
-                    header("Location: dashboardadm.php");
-                    break;
-                case 'طالب':
-                    header("Location: dashboardST.php");
-                    break;
-                case 'مشرف':
-                    header("Location: dashboardsupervisor.php");
-                    break;
-                default:
-                    $error = "نوع المستخدم غير معروف.";
+            try {
+                $stmt = $this->pdo->prepare("SELECT * FROM users WHERE email = ?");
+                $stmt->execute([$email]);
+                $user = $stmt->fetch();
+
+                if ($user && $password === $user['password']) {
+                    $_SESSION['user'] = $user;
+                    $this->redirectUser($user['role']);
+                } else {
+                    $this->error = "بيانات الدخول غير صحيحة.";
+                }
+            } catch (PDOException $e) {
+                $this->error = "خطأ في قاعدة البيانات: " . $e->getMessage();
             }
-            exit;
-        } else {
-            $error = "بيانات الدخول غير صحيحة.";
         }
     }
-} catch (PDOException $e) {
-    $error = "خطأ في قاعدة البيانات: " . $e->getMessage();
+
+    private function redirectUser($role) {
+        switch ($role) {
+            case 'مدير مشروع':
+                header("Location: dashboardadm.php");
+                break;
+            case 'طالب':
+                header("Location: dashboardST.php");
+                break;
+            case 'مشرف':
+                header("Location: dashboardsupervisor.php");
+                break;
+            default:
+                $this->error = "نوع المستخدم غير معروف.";
+        }
+        exit;
+    }
+
+    public function getError() {
+        return $this->error;
+    }
 }
+
+$login = new LoginHandler($pdo);
+$login->processLogin();
 ?>
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -131,7 +151,7 @@ try {
 <form method="POST">
     <h3>تسجيل الدخول</h3>
 
-    <?php if (isset($error)) echo "<p class='error'>$error</p>"; ?>
+    <?php if ($login->getError()) echo "<p class='error'>" . $login->getError() . "</p>"; ?>
 
     <input type="email" name="email" placeholder="البريد الإلكتروني" required><br>
     <input type="password" name="password" placeholder="كلمة المرور" required><br>
