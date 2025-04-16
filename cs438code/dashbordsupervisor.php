@@ -2,18 +2,36 @@
 include 'data.php';
 session_start();
 
-if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'مشرف') {
-    header("Location: login.php");
-    exit;
+class SupervisorDashboard {
+    private $pdo;
+    private $supervisorId;
+    public $projects = [];
+    public $error = '';
+
+    public function __construct($pdo) {
+        $this->pdo = $pdo;
+
+        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'مشرف') {
+            header("Location: login.php");
+            exit;
+        }
+
+        $this->supervisorId = $_SESSION['user']['user_id'];  // تأكد من استخدام المفتاح الصحيح
+    }
+
+    public function loadProjects() {
+        try {
+            $stmt = $this->pdo->prepare("SELECT * FROM projects WHERE manager_id = ?");
+            $stmt->execute([$this->supervisorId]);
+            $this->projects = $stmt->fetchAll();
+        } catch (PDOException $e) {
+            $this->error = "فشل في تحميل المشاريع: " . $e->getMessage();
+        }
+    }
 }
-echo $_SESSION['user']['user_id'];
 
-// استخدام المفتاح الصحيح حسب جدول users
-$supervisor_id = $_SESSION['user']['user_id'];
-
-$stmt = $pdo->prepare("SELECT * FROM projects WHERE manager_id = ?");
-$stmt->execute([$supervisor_id]);
-$projects = $stmt->fetchAll();
+$dashboard = new SupervisorDashboard($pdo);
+$dashboard->loadProjects();
 ?>
 
 <!DOCTYPE html>
@@ -105,26 +123,32 @@ $projects = $stmt->fetchAll();
 <div class="container">
     <h3>المشاريع التي تُشرف عليها</h3>
 
-    <table>
-        <tr>
-            <th>اسم المشروع</th>
-            <th>الوصف</th>
-            <th>الفريق</th>
-            <th>الفترة</th>
-            <th>خيارات</th>
-        </tr>
-        <?php foreach ($projects as $project): ?>
-        <tr>
-            <td><?php echo htmlspecialchars($project['title']); ?></td>
-            <td><?php echo htmlspecialchars($project['description']); ?></td>
-            <td><?php echo htmlspecialchars($project['team_id']); ?></td>
-            <td><?php echo htmlspecialchars($project['start_date']) . ' إلى ' . htmlspecialchars($project['end_date']); ?></td>
-            <td>
-                <a href="report.php?project_id=<?php echo $project['project_id']; ?>" class="button">كتابة تقرير</a>
-            </td>
-        </tr>
-        <?php endforeach; ?>
-    </table>
+    <?php if ($dashboard->error): ?>
+        <p style="color: red;"><?php echo $dashboard->error; ?></p>
+    <?php elseif (empty($dashboard->projects)): ?>
+        <p>لا توجد مشاريع حالياً.</p>
+    <?php else: ?>
+        <table>
+            <tr>
+                <th>اسم المشروع</th>
+                <th>الوصف</th>
+                <th>الفريق</th>
+                <th>الفترة</th>
+                <th>خيارات</th>
+            </tr>
+            <?php foreach ($dashboard->projects as $project): ?>
+            <tr>
+                <td><?php echo htmlspecialchars($project['title']); ?></td>
+                <td><?php echo htmlspecialchars($project['description']); ?></td>
+                <td><?php echo htmlspecialchars($project['team_id']); ?></td>
+                <td><?php echo htmlspecialchars($project['start_date']) . ' إلى ' . htmlspecialchars($project['end_date']); ?></td>
+                <td>
+                    <a href="report.php?project_id=<?php echo $project['project_id']; ?>" class="button">كتابة تقرير</a>
+                </td>
+            </tr>
+            <?php endforeach; ?>
+        </table>
+    <?php endif; ?>
 </div>
 
 </body>
