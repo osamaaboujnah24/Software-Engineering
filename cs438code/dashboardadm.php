@@ -2,18 +2,48 @@
 include 'data.php';
 session_start();
 
-// التحقق من إذا كان المستخدم هو مدير مشروع
-if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'مدير مشروع') {
+class AdminDashboard {
+    private $pdo;
+    public $projects = [];
+    public $error = '';
+
+    public function __construct($pdo) {
+        $this->pdo = $pdo;
+    }
+
+    public function isAuthenticated() {
+        return isset($_SESSION['user']) && $_SESSION['user']['role'] === 'مدير مشروع';
+    }
+
+    public function loadProjects() {
+        try {
+            $stmt = $this->pdo->prepare("SELECT * FROM projects");
+            $stmt->execute();
+            $this->projects = $stmt->fetchAll();
+        } catch (PDOException $e) {
+            $this->error = "فشل في جلب المشاريع: " . $e->getMessage();
+        }
+    }
+
+    public function getProgress($project_id) {
+        try {
+            $stmt = $this->pdo->prepare("SELECT progress_percent FROM progress_board WHERE project_id = ?");
+            $stmt->execute([$project_id]);
+            $result = $stmt->fetch();
+            return $result ? $result['progress_percent'] : 0;
+        } catch (PDOException $e) {
+            return 0;
+        }
+    }
+}
+
+$dashboard = new AdminDashboard($pdo);
+if (!$dashboard->isAuthenticated()) {
     header("Location: login.php");
     exit;
 }
-
-// جلب المشاريع
-$stmt_projects = $pdo->prepare("SELECT * FROM projects");
-$stmt_projects->execute();
-$projects = $stmt_projects->fetchAll();
+$dashboard->loadProjects();
 ?>
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -21,7 +51,7 @@ $projects = $stmt_projects->fetchAll();
     <title>لوحة تحكم مدير المشروع</title>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             background-color: #f4f7fc;
             color: #333;
             margin: 0;
@@ -29,69 +59,74 @@ $projects = $stmt_projects->fetchAll();
             text-align: center;
         }
 
-        h2, h3 {
-            color: #007bff;
-        }
-
-        a {
-            color: #007bff;
-            text-decoration: none;
-        }
-
-        a:hover {
-            text-decoration: underline;
-        }
-
         nav {
-            background-color: #007bff;
-            padding: 10px 0;
+            background-color: #2ecc71;
+            padding: 15px 0;
         }
 
         nav a {
             color: white;
             padding: 10px 20px;
             text-decoration: none;
-            font-size: 16px;
+            font-size: 18px;
+            margin: 0 10px;
+            transition: background-color 0.3s ease;
         }
 
         nav a:hover {
-            background-color: #0056b3;
+            background-color: #27ae60;
         }
 
         header {
-            background-color: #007bff;
+            background-color: #2ecc71;
             color: white;
-            padding: 15px 0;
+            padding: 25px 0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
 
         header h2 {
             margin: 0;
-            font-size: 24px;
+            font-size: 28px;
         }
 
-        form {
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 30px;
+            gap: 20px;
+        }
+
+        .box {
             background-color: white;
-            width: 60%;
-            margin: 30px auto;
-            padding: 30px;
+            width: 250px;
+            padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
         }
 
-        input[type="text"], input[type="email"], input[type="password"], textarea {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 16px;
-            box-sizing: border-box;
+        .box h3 {
+            font-size: 20px;
+            color: #2ecc71;
+        }
+
+        .box .percentage {
+            font-size: 30px;
+            color: #27ae60;
+            margin-top: 10px;
+        }
+
+        .table-title {
+            font-size: 22px;
+            color: #2ecc71;
+            margin-top: 40px;
         }
 
         table {
-            width: 80%;
+            width: 90%;
             margin: 20px auto;
             border-collapse: collapse;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
         th, td {
@@ -101,88 +136,73 @@ $projects = $stmt_projects->fetchAll();
         }
 
         th {
-            background-color: #007bff;
+            background-color: #2ecc71;
             color: white;
         }
 
         td {
-            background-color: #f9f9f9;
+            background-color: #ffffff;
         }
 
-        table tr:hover {
+        table tr:hover td {
             background-color: #f1f1f1;
         }
 
-        button {
-            padding: 12px 20px;
-            background-color: #28a745;
+        .view-link {
+            background-color: #27ae60;
+            padding: 6px 15px;
             color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #218838;
-        }
-
-        .logout-link {
-            margin-top: 20px;
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #dc3545;
-            color: white;
-            border-radius: 5px;
+            border-radius: 6px;
             text-decoration: none;
         }
 
-        .logout-link:hover {
-            background-color: #c82333;
+        .view-link:hover {
+            background-color: #1e874b;
         }
     </style>
 </head>
-
 <body>
 
 <nav>
-    <a href="dashboard.php">لوحة التحكم</a>
+    <a href="dashboardadm.php">لوحة التحكم</a>
     <a href="project.php">إضافة مشروع جديد</a>
     <a href="logout.php">تسجيل الخروج</a>
 </nav>
 
 <header>
-    <h2>مرحبًا، <?php echo $_SESSION['user']['full_name']; ?> (مدير مشروع)</h2>
+    <h2>مرحبًا، <?php echo htmlspecialchars($_SESSION['user']['full_name']); ?> (مدير مشروع)</h2>
 </header>
 
-<h3>المشاريع الحالية:</h3>
+<div class="container">
+    <div class="box">
+        <h3>إجمالي المشاريع</h3>
+        <p class="percentage"><?php echo count($dashboard->projects); ?></p>
+    </div>
+    <div class="box">
+        <h3>التقدم العام</h3>
+        <p class="percentage">--%</p> <!-- تطوير لاحق -->
+    </div>
+</div>
+
+<h3 class="table-title">المشاريع الحالية:</h3>
 <table>
     <tr>
         <th>العنوان</th>
         <th>الوصف</th>
-        <th>التاريخ</th>
-        <th>التقدم (%)</th>
+        <th>الفترة</th>
+        <th>التقدم</th>
         <th>الإجراءات</th>
     </tr>
-    <?php foreach ($projects as $project):
-        $stmt_progress = $pdo->prepare("SELECT progress_percent FROM progress_board WHERE project_id = ?");
-        $stmt_progress->execute([$project['project_id']]);
-        $progress = $stmt_progress->fetch();
-        $progress_percent = $progress ? $progress['progress_percent'] : 0;
-    ?>
-    <tr>
-        <td><?php echo $project['title']; ?></td>
-        <td><?php echo $project['description']; ?></td>
-        <td><?php echo $project['start_date']; ?> إلى <?php echo $project['end_date']; ?></td>
-        <td><?php echo $progress_percent; ?>%</td>
-        <td>
-			            <a href="veiwproject.php?id=<?php echo $project['project_id']; ?>">عرض</a>
-
-        </td>
-    </tr>
+    <?php foreach ($dashboard->projects as $project): ?>
+        <tr>
+            <td><?php echo htmlspecialchars($project['title']); ?></td>
+            <td><?php echo htmlspecialchars($project['description']); ?></td>
+            <td><?php echo htmlspecialchars($project['start_date']) . " إلى " . htmlspecialchars($project['end_date']); ?></td>
+            <td><?php echo $dashboard->getProgress($project['project_id']); ?>%</td>
+            <td><a class="view-link" href="veiwproject.php?id=<?php echo $project['project_id']; ?>">عرض</a></td>
+        </tr>
     <?php endforeach; ?>
 </table>
-
 
 </body>
 </html>
