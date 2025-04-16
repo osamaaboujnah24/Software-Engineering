@@ -2,25 +2,33 @@
 include 'data.php';
 session_start();
 
-$error = "";
+class StudentRegistration {
+    private $pdo;
+    public $error = "";
+
+    public function __construct($pdo) {
+        $this->pdo = $pdo;
+    }
+
+    public function register($name, $email, $password) {
+        try {
+            $stmt = $this->pdo->prepare("INSERT INTO users (full_name, email, password, role, status, permission_level)
+                                         VALUES (?, ?, ?, 'طالب', 'نشط', 'عرض')");
+            $stmt->execute([$name, $email, $password]);
+
+            $_SESSION['user'] = ['full_name' => $name, 'role' => 'طالب'];
+            header("Location: dashboardST.php");
+            exit;
+        } catch (PDOException $e) {
+            $this->error = "حدث خطأ أثناء التسجيل: " . $e->getMessage();
+        }
+    }
+}
+
+$register = new StudentRegistration($pdo);
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $name = $_POST['full_name'];
-    $email = $_POST['email'];
-    $password = $_POST['password']; // غير مشفر حسب طلبك
-    $role = 'طالب';
-
-    try {
-        $stmt = $pdo->prepare("INSERT INTO users (full_name, email, password, role, status, permission_level)
-                               VALUES (?, ?, ?, ?, 'نشط', 'عرض')");
-        $stmt->execute([$name, $email, $password, $role]);
-
-        $_SESSION['user'] = ['full_name' => $name, 'role' => $role];
-        header("Location: dashboardST.php");
-        exit;
-    } catch (PDOException $e) {
-        $error = "حدث خطأ أثناء التسجيل: " . $e->getMessage();
-    }
+    $register->register($_POST['full_name'], $_POST['email'], $_POST['password']);
 }
 ?>
 <!DOCTYPE html>
@@ -112,8 +120,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 <form method="POST">
     <h3>تسجيل طالب جديد</h3>
-
-    <?php if (!empty($error)) echo "<p class='error'>$error</p>"; ?>
+    <?php if (!empty($register->error)) echo "<p class='error'>{$register->error}</p>"; ?>
 
     <input type="text" name="full_name" placeholder="الاسم الكامل" required>
     <input type="email" name="email" placeholder="البريد الإلكتروني" required>
