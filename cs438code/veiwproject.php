@@ -15,7 +15,6 @@ class ProjectDetails {
 
     public function fetchProjectDetails($project_id) {
         try {
-            // جلب تفاصيل المشروع
             $stmt_project = $this->pdo->prepare("SELECT * FROM projects WHERE project_id = ?");
             $stmt_project->execute([$project_id]);
             $this->project = $stmt_project->fetch();
@@ -25,7 +24,6 @@ class ProjectDetails {
                 return;
             }
 
-            // جلب التقدم
             $stmt_progress = $this->pdo->prepare("SELECT progress_percent FROM progress_board WHERE project_id = ?");
             $stmt_progress->execute([$project_id]);
             $progress = $stmt_progress->fetch();
@@ -42,7 +40,6 @@ class ProjectDetails {
     }
 }
 
-// تحقق من صلاحية المستخدم
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'مدير مشروع') {
     header("Location: login.php");
     exit;
