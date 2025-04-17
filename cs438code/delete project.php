@@ -1,34 +1,46 @@
 <?php
-include 'database.php';
 session_start();
+include 'database.php';
 
-// التحقق من إذا كان المستخدم هو مدير مشروع
-if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'مدير مشروع') {
+class ProjectManager {
+    private $pdo;
+
+    public function __construct($pdo) {
+        $this->pdo = $pdo;
+    }
+
+    public function deleteProject($project_id) {
+        try {
+            $stmt = $this->pdo->prepare("DELETE FROM projects WHERE project_id = ?");
+            $stmt->execute([$project_id]);
+
+            if ($stmt->rowCount() > 0) {
+                $this->redirectWithMessage("تم حذف المشروع بنجاح!", "dashboard.php");
+            } else {
+                $this->redirectWithMessage("حدث خطأ أثناء حذف المشروع.", "dashboard.php");
+            }
+        } catch (PDOException $e) {
+            $this->redirectWithMessage("خطأ في قاعدة البيانات: " . $e->getMessage(), "dashboard.php");
+        }
+    }
+
+    private function redirectWithMessage($message, $redirectTo) {
+        echo "<script>alert('$message'); window.location.href = '$redirectTo';</script>";
+        exit;
+    }
+}
+
+// التحقق من تسجيل دخول المستخدم وصلاحيته
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'مدير مشروع') {
     header("Location: login.php");
     exit;
 }
 
-// التحقق من وجود `project_id` في الرابط
+// التحقق من وجود project_id
 if (isset($_GET['id'])) {
-    $project_id = $_GET['id'];
-
-    // تنفيذ استعلام لحذف المشروع من جدول projects
-    $stmt = $pdo->prepare("DELETE FROM projects WHERE project_id = ?");
-    $stmt->execute([$project_id]);
-
-    // التحقق من نجاح عملية الحذف
-    if ($stmt->rowCount() > 0) {
-        // إذا تم الحذف بنجاح، نعرض رسالة بنجاح الحذف
-        echo "<script>alert('تم حذف المشروع بنجاح!'); window.location.href = 'dashboard.php';</script>";
-        exit;
-    } else {
-        // إذا لم يتم الحذف (مثلاً إذا لم يتم العثور على المشروع)
-        echo "<script>alert('حدث خطأ أثناء حذف المشروع.'); window.location.href = 'dashboard.php';</script>";
-        exit;
-    }
+    $manager = new ProjectManager($pdo);
+    $manager->deleteProject($_GET['id']);
 } else {
-    // إذا كانت `project_id` غير موجودة في الرابط
     echo "<script>alert('المشروع غير موجود!'); window.location.href = 'dashboard.php';</script>";
     exit;
 }
-?>
