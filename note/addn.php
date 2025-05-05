@@ -174,10 +174,10 @@ if ($task_id) {
         <button type="submit">إضافة الملاحظة</button>
     </form>
 
-    <h3>الملاحظات:</h3>
+    
     <ul>
         <?php foreach ($comments as $comment): ?>
-        
+         
         <?php endforeach; ?>
     </ul>
 </div>
