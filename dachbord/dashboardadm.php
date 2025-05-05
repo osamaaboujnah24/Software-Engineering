@@ -17,8 +17,9 @@ class AdminDashboard {
 
     public function loadProjects() {
         try {
-            $stmt = $this->pdo->prepare("SELECT * FROM projects");
-            $stmt->execute();
+            $manager_id = $_SESSION['user']['user_id'];
+            $stmt = $this->pdo->prepare("SELECT * FROM projects WHERE manager_id = ?");
+            $stmt->execute([$manager_id]);
             $this->projects = $stmt->fetchAll();
         } catch (PDOException $e) {
             $this->error = "فشل في جلب المشاريع: " . $e->getMessage();
@@ -44,6 +45,7 @@ if (!$dashboard->isAuthenticated()) {
 }
 $dashboard->loadProjects();
 ?>
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -60,7 +62,7 @@ $dashboard->loadProjects();
         }
 
         nav {
-            background-color: #2ecc71;
+            background-color: #1abc9c;
             padding: 15px 0;
         }
 
@@ -78,7 +80,7 @@ $dashboard->loadProjects();
         }
 
         header {
-            background-color: #2ecc71;
+            background-color: #1abc9c;
             color: white;
             padding: 25px 0;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
@@ -136,7 +138,7 @@ $dashboard->loadProjects();
         }
 
         th {
-            background-color: #2ecc71;
+            background-color: #1abc9c;
             color: white;
         }
 
@@ -166,6 +168,7 @@ $dashboard->loadProjects();
 <nav>
     <a href="dashboardadm.php">لوحة التحكم</a>
     <a href="project.php">إضافة مشروع جديد</a>
+    <a href="tes.php">إدارة الفرق</a>
     <a href="logout.php">تسجيل الخروج</a>
 </nav>
 
@@ -180,7 +183,7 @@ $dashboard->loadProjects();
     </div>
     <div class="box">
         <h3>التقدم العام</h3>
-        <p class="percentage">--%</p> <!-- تطوير لاحق -->
+        <p class="percentage">--%</p>
     </div>
 </div>
 
