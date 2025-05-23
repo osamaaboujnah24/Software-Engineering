@@ -57,6 +57,10 @@ class TaskManager {
             $stmt_deadline = $this->pdo->prepare("INSERT INTO deadlines (task_id, due_date) VALUES (?, ?)");
             $stmt_deadline->execute([$task_id, $due_date]);
 
+$notificationMsg = " تم تكليفك بمهمة جديدة: {$title}";
+$stmtNotif = $this->pdo->prepare("INSERT INTO notifications (user_id, content) VALUES (?, ?)");
+$stmtNotif->execute([$assigned_to, $notificationMsg]);
+
 
             header("Location: manage_tasks.php");
             exit;
