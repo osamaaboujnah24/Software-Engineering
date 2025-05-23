@@ -31,7 +31,6 @@ class NotificationHandler {
     }
 }
 
-// استخدام الكلاس
 $userId = $_SESSION['user']['user_id'];
 $notifHandler = new NotificationHandler($pdo, $userId);
 
