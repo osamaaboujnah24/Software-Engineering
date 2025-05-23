@@ -11,6 +11,16 @@ $task_id = $_GET['task_id'] ?? null;
 
 if ($task_id) {
     try {
+        $stmt = $pdo->prepare("SELECT assigned_user_id, title FROM tasks WHERE task_id = ?");
+        $stmt->execute([$task_id]);
+        $task = $stmt->fetch();
+
+        if ($task) {
+            $notificationMsg = " تم حذف المهمة '{$task['title']}' التي كُلفت بها.";
+            $stmtNotif = $pdo->prepare("INSERT INTO notifications (user_id, content) VALUES (?, ?)");
+            $stmtNotif->execute([$task['assigned_user_id'], $notificationMsg]);
+        }
+
         $stmt = $pdo->prepare("DELETE FROM tasks WHERE task_id = ?");
         $stmt->execute([$task_id]);
 
@@ -18,8 +28,7 @@ if ($task_id) {
         if ($project_id) {
             header("Location: vewtask.php?id=" . $project_id);
             exit;
-        } 
-        
+        }
 
     } catch (PDOException $e) {
         echo "حدث خطأ أثناء حذف المهمة: " . $e->getMessage();
