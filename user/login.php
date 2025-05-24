@@ -1,5 +1,8 @@
 <?php
-include 'data.php';
+
+require_once 'Data.php';
+$pdo = Database::getInstance()->getConnection();
+include 'DashboardFactory.php';
 session_start();
 
 class LoginHandler {
@@ -22,31 +25,17 @@ class LoginHandler {
 
                 if ($user && $password === $user['password']) {
                     $_SESSION['user'] = $user;
-                    $this->redirectUser($user['role']);
+
+                    DashboardFactory::redirectByRole($user['role']);
                 } else {
                     $this->error = "بيانات الدخول غير صحيحة.";
                 }
             } catch (PDOException $e) {
                 $this->error = "خطأ في قاعدة البيانات: " . $e->getMessage();
+            } catch (Exception $e) {
+                $this->error = $e->getMessage();
             }
         }
-    }
-
-    private function redirectUser($role) {
-        switch ($role) {
-            case 'مدير مشروع':
-                header("Location: dashboardadm.php");
-                break;
-            case 'طالب':
-                header("Location: dashboardST.php");
-                break;
-            case 'مشرف':
-                header("Location: dashboardsupervisor.php");
-                break;
-            default:
-                $this->error = "نوع المستخدم غير معروف.";
-        }
-        exit;
     }
 
     public function getError() {
