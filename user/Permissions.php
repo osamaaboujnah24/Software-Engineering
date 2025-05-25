@@ -38,7 +38,7 @@ if (isset($_POST['select_user']) && $_POST['user_id']) {
 <html lang="ar">
 <head>
     <meta charset="UTF-8">
-    <title>تعديل بيانات العضو</title>
+    <title>تعديل بيانات </title>
     <style>
         body {
             font-family: 'Cairo', sans-serif;
@@ -98,7 +98,7 @@ if (isset($_POST['select_user']) && $_POST['user_id']) {
 <body>
 
 <div class="form-box">
-    <h2>تعديل بيانات العضو</h2>
+    <h2>تعديل بيانات </h2>
 
     <form method="POST">
         <label>اختر العضو:</label>
