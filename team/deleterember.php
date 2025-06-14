@@ -1,6 +1,10 @@
 <?php
-include 'data.php';
-session_start();
+require_once 'data.php';
+require_once 'AuthManager.php';
+$pdo = Database::getInstance()->getConnection();
+
+
+AuthManager::requireRole('مدير مشروع');
 
 class TeamMemberRemoval {
     private $pdo;
@@ -9,11 +13,6 @@ class TeamMemberRemoval {
 
     public function __construct($pdo) {
         $this->pdo = $pdo;
-
-        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'مدير مشروع') {
-            header("Location: login.php");
-            exit;
-        }
     }
 
     public function removeMember($team_id, $user_id) {
@@ -22,19 +21,18 @@ class TeamMemberRemoval {
             $stmt->execute([$team_id, $user_id]);
 
             if ($stmt->rowCount() > 0) {
-                $this->success = " تم حذف العضو من الفريق .";
+                $this->success = "✅ تم حذف العضو من الفريق بنجاح.";
             } else {
-                $this->error = " هذا العضو غير موجود في الفريق.";
+                $this->error = "⚠️ هذا العضو غير موجود في الفريق.";
             }
         } catch (PDOException $e) {
-            $this->error = " خطأ في قاعدة البيانات: " . $e->getMessage();
+            $this->error = "❌ خطأ في قاعدة البيانات: " . $e->getMessage();
         }
     }
 }
 
 $manager = new TeamMemberRemoval($pdo);
 
-// عند الإرسال
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['team_id'], $_POST['user_id'])) {
     $manager->removeMember($_POST['team_id'], $_POST['user_id']);
 }
