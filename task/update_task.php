@@ -1,12 +1,10 @@
 <?php
 include 'data.php';
+require_once 'AuthManager.php';
+$pdo = Database::getInstance()->getConnection();
 
-session_start();
 
-if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'مدير مشروع') {
-    header("Location: login.php");
-    exit;
-}
+AuthManager::requireRole('مدير مشروع');
 
 class EditTaskHandler {
     private $pdo;
@@ -46,20 +44,11 @@ class EditTaskHandler {
 
     public function handleFormSubmission() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $title = $_POST['title'];
-            $description = $_POST['description'];
-            $assigned_user_id = $_POST['assigned_user_id'];
-            $start_date = $_POST['start_date'];
-            $end_date = $_POST['end_date'];
-            $status = $_POST['status'];
+            [$title, $description, $assigned_user_id, $start_date, $end_date, $status] = $this->getFormInput();
 
             try {
-                $stmt = $this->pdo->prepare("UPDATE tasks SET title = ?, description = ?, assigned_user_id = ?, start_date = ?, end_date = ?, status = ? WHERE task_id = ?");
-                $stmt->execute([$title, $description, $assigned_user_id, $start_date, $end_date, $status, $this->task_id]);
-
-                $notificationMsg = "تم تعديل المهمة '{$title}' التي كُلفت بها.";
-                $stmtNotif = $this->pdo->prepare("INSERT INTO notifications (user_id, content) VALUES (?, ?)");
-                $stmtNotif->execute([$assigned_user_id, $notificationMsg]);
+                $this->updateTaskInDatabase($title, $description, $assigned_user_id, $start_date, $end_date, $status);
+                $this->notifyUser($assigned_user_id, $title);
 
                 header("Location: viewtasks.php?id=" . $this->project_id);
                 exit;
@@ -67,6 +56,28 @@ class EditTaskHandler {
                 $this->error = "خطأ أثناء تعديل المهمة: " . $e->getMessage();
             }
         }
+    }
+
+    private function getFormInput() {
+        return [
+            $_POST['title'],
+            $_POST['description'],
+            $_POST['assigned_user_id'],
+            $_POST['start_date'],
+            $_POST['end_date'],
+            $_POST['status']
+        ];
+    }
+
+    private function updateTaskInDatabase($title, $description, $assigned_user_id, $start_date, $end_date, $status) {
+        $stmt = $this->pdo->prepare("UPDATE tasks SET title = ?, description = ?, assigned_user_id = ?, start_date = ?, end_date = ?, status = ? WHERE task_id = ?");
+        $stmt->execute([$title, $description, $assigned_user_id, $start_date, $end_date, $status, $this->task_id]);
+    }
+
+    private function notifyUser($assigned_user_id, $title) {
+        $notificationMsg = "تم تعديل المهمة '{$title}' التي كُلفت بها.";
+        $stmtNotif = $this->pdo->prepare("INSERT INTO notifications (user_id, content) VALUES (?, ?)");
+        $stmtNotif->execute([$assigned_user_id, $notificationMsg]);
     }
 }
 
@@ -85,27 +96,10 @@ $error = $handler->error;
     <meta charset="UTF-8">
     <title>تعديل المهمة</title>
     <style>
-        body { font-family: 'Arial', sans-serif;
-		background: #f4f4f4;
-		padding: 20px;
-		}
-        form { background: white;
-		padding: 20px;
-		border-radius: 10px;
-		max-width: 600px;
-		margin: auto; 
-		}
-        input, textarea, select { width: 100%;
-		padding: 10px;
-		margin-bottom: 10px;
-		}
-        button { padding: 10px 20px;
-		background-color: #1abc9c;
-		color: white; 
-		border: none;
-		border-radius: 5px; 
-		cursor: pointer;
-		}
+        body { font-family: 'Arial', sans-serif; background: #f4f4f4; padding: 20px; }
+        form { background: white; padding: 20px; border-radius: 10px; max-width: 600px; margin: auto; }
+        input, textarea, select { width: 100%; padding: 10px; margin-bottom: 10px; }
+        button { padding: 10px 20px; background-color: #1abc9c; color: white; border: none; border-radius: 5px; cursor: pointer; }
         button:hover { background-color: #16a085; }
         .error { color: red; text-align: center; }
     </style>
