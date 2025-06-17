@@ -1,20 +1,27 @@
 <?php
 class DashboardFactory {
-    public static function redirectByRole($role) {
+    public static string $redirectUrl = ''; 
+
+    public static function redirectByRole($role, $testMode = false) {
         switch ($role) {
             case 'مدير مشروع':
-                header("Location: dashboardadm.php");
+                $url = 'dashboardadm.php';
                 break;
             case 'طالب':
-                header("Location: dashboardST.php");
+                $url = 'dashboardST.php';
                 break;
             case 'مشرف':
-                header("Location: dashboardsupervisor.php");
+                $url = 'dashboardsupervisor.php';
                 break;
             default:
-                throw new Exception("  غير معروف.");
+                throw new Exception("نوع المستخدم غير معروف.");
         }
-        exit;
+
+        if ($testMode) {
+            self::$redirectUrl = $url;  
+        } else {
+            header("Location: $url");
+            exit;
+        }
     }
 }
-?>
